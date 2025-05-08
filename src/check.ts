@@ -22,6 +22,9 @@ export async function check(
 			return new Error("Failed to fetch from proxycheck.io");
 		}
 		const data = await res.json();
+		if (data.status !== "ok") {
+			return new Error("Failed to fetch from proxycheck.io");
+		}
 		const dataWithTimestamp = {
 			...data,
 			cachedAt: new Date().toISOString(),
