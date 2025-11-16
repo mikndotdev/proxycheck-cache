@@ -16,7 +16,7 @@ export async function check(
 		return cache;
 	} else {
 		const res = await fetch(
-			`https://proxycheck.io/v2/${ip}?risk=1&vpn=3&asn=1&key=${apiKey}`,
+			`https://proxycheck.io/v2/${ip}?risk=1&vpn=3&asn=1&risk=1&key=${apiKey}`,
 		);
 		if (!res.ok) {
 			return new Error("Failed to fetch from proxycheck.io");
