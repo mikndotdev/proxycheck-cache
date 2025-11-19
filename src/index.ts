@@ -1,22 +1,27 @@
-import { Hono } from "hono";
-import { Bindings } from "./bindings";
+import { Elysia } from "elysia";
+import Redis from "ioredis";
 import { check } from "./check";
 
-const app = new Hono<{ Bindings: Bindings }>();
-
-app.get("/check/:ip", async (c) => {
-	const ip = c.req.param("ip");
-	try {
-		const res = await check(
-			ip,
-			c.env.UPSTASH_REDIS_REST_URL,
-			c.env.UPSTASH_REDIS_REST_TOKEN,
-			c.env.PROXYCHECK_API_KEY,
-		);
-		return c.json(res);
-	} catch (error) {
-		return c.json({ error: "Failed to fetch data" }, 500);
-	}
+const redis = new Redis({
+	host: process.env.REDIS_HOST || "localhost",
+	port: Number(process.env.REDIS_PORT) || 6379,
+	password: process.env.REDIS_PASSWORD,
+	db: Number(process.env.REDIS_DB) || 0,
 });
 
-export default app;
+const app = new Elysia()
+	.get("/check/:ip", async ({ params: { ip } }) => {
+		try {
+			const res = await check(
+				ip,
+				redis,
+				process.env.PROXYCHECK_API_KEY || "",
+			);
+			return res;
+		} catch (error) {
+			return { error: "Failed to fetch data" };
+		}
+	})
+	.listen(3000);
+
+console.log(`Server is running at ${app.server?.hostname}:${app.server?.port}`);
